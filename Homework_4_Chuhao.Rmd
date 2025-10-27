@@ -1,0 +1,52 @@
+---
+title: "wk4 homework"
+output: html_document
+date: "2025-10-27"
+---
+```{r}
+library(tidyverse)
+library(sf)
+library(here)
+library(janitor)
+library(countrycode)
+```
+#读取数据
+```{r}
+GII <- read_csv(here::here("HDR25_Composite_indices_complete_time_series.csv"),
+                       locale = locale(encoding = "latin1"),
+                       na = " ", skip=0)
+
+World <- st_read("C:/Users/asus/Documents/GitHub/gis/wk4/World_Countries_(Generalized)_-573431906301700955/World_Countries_Generalized.shp")
+```
+#清理数据
+```{r}
+GII_clean <- GII %>%
+  clean_names() %>%
+  select(iso3, country, gii_2010, gii_2019) %>%
+  mutate(
+    difference = gii_2019 - gii_2010,
+    iso2 = countrycode(iso3, origin = "iso3c", destination = "iso2c")
+  )
+
+```
+#数据加入
+```{r}
+world_joined <- World %>%
+  left_join(GII_clean, by = c("ISO" = "iso3"))
+```
+#检查数据
+```{r}
+glimpse(world_joined)
+```
+#可视化
+```{r}
+library(ggplot2)
+
+ggplot(world_joined) +
+  geom_sf(aes(fill = difference), color = "white", size = 0.1) +
+  scale_fill_viridis_c(option = "plasma", na.value = "grey90") +
+  theme_minimal() +
+  labs(title = "Change in Gender Inequality Index (2010–2019)",
+       fill = "Δ GII")
+```
+
