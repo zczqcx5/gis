@@ -9,6 +9,7 @@ library(sf)
 library(here)
 library(janitor)
 library(countrycode)
+library(tmap)
 ```
 #读取数据
 ```{r}
@@ -16,7 +17,7 @@ GII <- read_csv(here::here("HDR25_Composite_indices_complete_time_series.csv"),
                        locale = locale(encoding = "latin1"),
                        na = " ", skip=0)
 
-World <- st_read("C:/Users/asus/Documents/GitHub/gis/wk4/World_Countries_(Generalized)_-573431906301700955/World_Countries_Generalized.shp")
+World <- st_read(here::here("World_Countries_(Generalized)_-573431906301700955/World_Countries_Generalized.shp"))
 ```
 #清理数据
 ```{r}
@@ -31,8 +32,7 @@ GII_clean <- GII %>%
 ```
 #数据加入
 ```{r}
-world_joined <- World %>%
-  left_join(GII_clean, by = c("ISO" = "iso3"))
+world_joined <- left_join(World, GII_clean, by = c("ISO" = "iso2")) 
 ```
 #检查数据
 ```{r}
@@ -48,5 +48,33 @@ ggplot(world_joined) +
   theme_minimal() +
   labs(title = "Change in Gender Inequality Index (2010–2019)",
        fill = "Δ GII")
+```
+
+
+## New map
+```{r}
+tmap_mode("plot")
+
+tm1 <- tm_shape(world_joined) +
+  tm_polygons(
+    col = "difference",
+    palette = "BuPu",
+    n = 5,
+    style = "jenks",
+    border.col = "black",
+    border.lwd = 0.5,
+    colorNA = "lightgrey",  # <--- show NA countries in gray
+    title = "GII Difference (2019 - 2010)"
+  )
+
+tm1
+```
+```{r}
+tm2 <- tm1 +
+  tm_compass(type = "arrow",
+             size = 1.8,
+             position = tm_pos_in("left", "top"))
+
+tm2
 ```
 
